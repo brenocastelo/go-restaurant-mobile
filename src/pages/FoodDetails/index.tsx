@@ -73,34 +73,74 @@ const FoodDetails: React.FC = () => {
 
   useEffect(() => {
     async function loadFood(): Promise<void> {
-      // Load a specific food with extras based on routeParams id
+      const { data } = await api.get(`/foods/${routeParams.id}`);
+      const formattedFood = {
+        ...data,
+        formattedPrice: formatValue(data.price),
+      };
+
+      const parsedExtras = data.extras.map((extra: Extra) => ({
+        ...extra,
+        quantity: 0,
+      }));
+
+      setFood(formattedFood);
+      setExtras(parsedExtras);
     }
 
     loadFood();
   }, [routeParams]);
 
   function handleIncrementExtra(id: number): void {
-    // Increment extra quantity
+    const updatedExtras = extras.map(extra => {
+      if (extra.id === id) {
+        return { ...extra, quantity: extra.quantity + 1 };
+      }
+
+      return extra;
+    });
+
+    setExtras(updatedExtras);
   }
 
   function handleDecrementExtra(id: number): void {
-    // Decrement extra quantity
+    const updatedExtras = extras.map(extra => {
+      if (extra.id === id) {
+        return { ...extra, quantity: extra.quantity - 1 };
+      }
+
+      return extra;
+    });
+
+    setExtras(updatedExtras);
   }
 
   function handleIncrementFood(): void {
-    // Increment food quantity
+    setFoodQuantity(foodQuantity + 1);
   }
 
   function handleDecrementFood(): void {
-    // Decrement food quantity
+    if (foodQuantity === 1) return;
+
+    setFoodQuantity(foodQuantity - 1);
   }
 
   const toggleFavorite = useCallback(() => {
-    // Toggle if food is favorite or not
+    setIsFavorite(!isFavorite);
   }, [isFavorite, food]);
 
   const cartTotal = useMemo(() => {
-    // Calculate cartTotal
+    const extrasTotal = extras.reduce((acc, current) => {
+      const total = acc + current.quantity * current.value;
+
+      return total;
+    }, 0);
+
+    const foodTotal = food.price * foodQuantity;
+
+    const total = formatValue(foodTotal + extrasTotal);
+
+    return total;
   }, [extras, food, foodQuantity]);
 
   async function handleFinishOrder(): Promise<void> {
